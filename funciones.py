@@ -26,20 +26,26 @@ def encoding(df, cols, encoding):
     elif encoding == 'LE':  # Label Encoding
         encoder = preprocessing.LabelEncoder()
         df_encoded = df.copy()
-        df_encoded[cols] = encoder.fit_transform(df[cols])
+        for col in cols:
+            df_encoded[col] = encoder.fit_transform(df[col])
     
     elif encoding == 'OE':  # Ordinal Encoding
         encoder = OrdinalEncoder()
         df_encoded = df.copy()
-        df_encoded[cols] = encoder.fit_transform(df[cols])
+        for col in cols:
+            df_encoded[col] = encoder.fit_transform(df[col].values.reshape(-1, 1))
 
     elif encoding == 'FE':  # Frequency Encoding
+        df_encoded = df.copy()
+        for col in cols:
+            df_encoded[col] = df_encoded[col].astype('category')
         encoder = CountFrequencyEncoder(encoding_method='count', variables=cols)
-        df_encoded = encoder.fit_transform(df)
+        df_encoded = encoder.fit_transform(df_encoded)
     
     elif encoding == 'TE':  # Target Encoding
         encoder = TargetEncoder(cols=cols)
-        df_encoded = encoder.fit_transform(df, df[cols])  
+        df_encoded = df.copy()
+        df_encoded[cols] = encoder.fit_transform(df[cols], df['conversion']) 
     
     else:
         raise ValueError("Tipo de codificación no válido. Usa 'OHE', 'LE', 'OE', 'FE' o 'TE'.")
