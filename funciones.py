@@ -7,6 +7,10 @@ from sklearn.preprocessing import OrdinalEncoder
 from sklearn import preprocessing
 import pandas as pd
 
+# Balance
+from imblearn.over_sampling import RandomOverSampler, SMOTE
+from imblearn.under_sampling import RandomUnderSampler, NearMiss, TomekLinks
+
 # Optimization
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_val_score
 from skopt.searchcv import BayesSearchCV
@@ -56,6 +60,31 @@ def encoding(df, cols, encoding):
         raise ValueError("Tipo de codificación no válido. Usa 'OHE', 'LE', 'OE', 'FE' o 'TE'.")
 
     return df_encoded
+
+
+
+def balance(X_train, y_train, technique):
+    if technique == 'OS':  # Oversampling
+        resampler = RandomOverSampler(sampling_strategy='auto', random_state=42)
+        
+    elif technique == 'US':  # Undersampling
+        resampler = RandomUnderSampler(sampling_strategy='auto', random_state=42)
+        
+    elif technique == 'LT':  # Links de Tomek
+        resampler = TomekLinks(sampling_strategy='majority')
+        
+    elif technique == 'NM':  # Near Miss
+        resampler = NearMiss(version=1)
+        
+    elif technique == 'SM':  # SMOTE
+        resampler = SMOTE(random_state=42)
+        
+    else:
+        raise ValueError(f"Técnica de balanceo no reconocida: {technique}")
+        
+    X_balanced, y_balanced = resampler.fit_resample(X_train, y_train)
+    return X_balanced, y_balanced
+
 
 
 class Optimization:
@@ -182,3 +211,4 @@ class Optimization:
         study.optimize(objective, n_trials=n_trials)
         # best_params = study.best_params
         return study #best_params
+    
