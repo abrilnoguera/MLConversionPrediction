@@ -50,9 +50,12 @@ def encoding(df, cols, encoding):
             df_encoded[col] = df[col].map(lambda s: encoder.transform([s])[0] if s in encoder.classes_ else -1)
     
     elif encoding == 'OE':  # Ordinal Encoding
-        encoder = OrdinalEncoder().fit(train_df[cols])
+        encoder = OrdinalEncoder()
+        encoder.fit(train_df[cols])
         df_encoded = df.copy()
-        df_encoded[cols] = df[col].map(lambda s: encoder.transform([s])[0] if s in encoder.classes_ else -1)
+        for col in cols:
+            known_vals = encoder.categories_[cols.index(col)]
+            df_encoded[col] = df[col].apply(lambda x: known_vals.tolist().index(x) if x in known_vals else -1)
 
     elif encoding == 'FE':  # Frequency Encoding
         df_encoded = df.copy()
