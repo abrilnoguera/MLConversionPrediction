@@ -16,6 +16,8 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_val_
 from skopt.searchcv import BayesSearchCV
 import optuna
 
+
+
 def encoding(df, cols, encoding):
     """
     Aplica la codificación especificada a las columnas seleccionadas del DataFrame.
@@ -29,32 +31,43 @@ def encoding(df, cols, encoding):
     DataFrame: Un nuevo DataFrame con las columnas codificadas.
     """
 
+    train_df = df[df["ROW_ID"].isna()]
+
     if encoding == 'OHE':  # One-Hot Encoding (Dummies)
         df_encoded = pd.get_dummies(df, columns=cols, prefix=cols)
+        train_encoded = pd.get_dummies(train_df, columns=cols, prefix=cols)
+
+        # Asegurar que las columnas coincidan
+        for col in train_encoded.columns:
+            if col not in df_encoded.columns:
+                df_encoded[col] = 0
+        df_encoded = df_encoded[train_encoded.columns]
     
     elif encoding == 'LE':  # Label Encoding
-        encoder = preprocessing.LabelEncoder()
         df_encoded = df.copy()
         for col in cols:
-            df_encoded[col] = encoder.fit_transform(df[col])
+            encoder = preprocessing.LabelEncoder().fit(train_df[col])
+            df_encoded[col] = df[col].map(lambda s: encoder.transform([s])[0] if s in encoder.classes_ else -1)
     
     elif encoding == 'OE':  # Ordinal Encoding
-        encoder = OrdinalEncoder()
+        encoder = OrdinalEncoder().fit(train_df[cols])
         df_encoded = df.copy()
-        for col in cols:
-            df_encoded[col] = encoder.fit_transform(df[col].values.reshape(-1, 1))
+        df_encoded[cols] = df[col].map(lambda s: encoder.transform([s])[0] if s in encoder.classes_ else -1)
 
     elif encoding == 'FE':  # Frequency Encoding
         df_encoded = df.copy()
         for col in cols:
-            df_encoded[col] = df_encoded[col].astype('category')
-        encoder = CountFrequencyEncoder(encoding_method='count', variables=cols)
-        df_encoded = encoder.fit_transform(df_encoded)
-    
+            freq = train_df[col].value_counts(normalize=True)
+            df_encoded[col] = df[col].map(freq).fillna(0)
+
     elif encoding == 'TE':  # Target Encoding
         encoder = TargetEncoder(cols=cols)
         df_encoded = df.copy()
-        df_encoded[cols] = encoder.fit_transform(df[cols], df['conversion']) 
+        if 'conversion' in df.columns:
+            encoder.fit(train_df[cols], train_df['conversion'])
+            df_encoded[cols] = encoder.transform(df[cols])
+        else:
+            df_encoded[cols] = encoder.transform(df[cols]) 
     
     else:
         raise ValueError("Tipo de codificación no válido. Usa 'OHE', 'LE', 'OE', 'FE' o 'TE'.")
