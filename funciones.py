@@ -146,7 +146,7 @@ class Optimization:
             n_iter=self.n_iter,
             cv=self.cv,
             random_state=self.random_state,
-            scoring = 'pr_auc'
+            scoring = 'average_precision'
         )
         random_search.fit(X, y)
 
@@ -173,7 +173,7 @@ class Optimization:
             n_iter=self.n_iter,
             cv=self.cv,
             random_state=self.random_state,
-            scoring = 'pr_auc'
+            scoring = 'average_precision'
         )
         bayes_search.fit(x, y)
 
