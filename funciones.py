@@ -146,10 +146,11 @@ class Optimization:
             n_iter=self.n_iter,
             cv=self.cv,
             random_state=self.random_state,
+            scoring = 'pr_auc'
         )
         random_search.fit(X, y)
-        # best_params = random_search.best_params_
-        return random_search #best_params
+
+        return random_search 
 
     def bayesian_optimization(self, x, y, search_spaces):
         """
@@ -172,10 +173,11 @@ class Optimization:
             n_iter=self.n_iter,
             cv=self.cv,
             random_state=self.random_state,
+            scoring = 'pr_auc'
         )
         bayes_search.fit(x, y)
-        # best_params = bayes_search.best_params_
-        return bayes_search #best_params
+
+        return bayes_search 
 
     def optuna_optimization(self, X, y, n_trials=100):
         """
@@ -205,11 +207,17 @@ class Optimization:
                     raise ValueError(f"Unsupported parameter type: {type(value)}")
 
             self.model.set_params(**params)
-            scores = cross_val_score(self.model, X, y, cv=self.cv)
-            return -scores.mean()  # Minimize negative mean cross-validation score
+            scores = cross_val_score(self.model, X, y, cv=self.cv, scoring='average_precision') # set scoring to average_precision
+            return scores.mean()  # Maximize mean cross-validation score
 
-        study = optuna.create_study(direction="minimize")
+        study = optuna.create_study(direction="maximize") # set direction to maximize
         study.optimize(objective, n_trials=n_trials)
-        # best_params = study.best_params
-        return study #best_params
+
+        return study 
+
+
+
+
+
+
     
