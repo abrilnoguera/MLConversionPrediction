@@ -204,7 +204,7 @@ class Optimization:
                 elif isinstance(value, float):
                     params[key] = trial.suggest_float(key, value[0], value[1])
                 else:
-                    raise ValueError(f"Unsupported parameter type: {type(value)}")
+                    raise ValueError(f"Unsupported parameter type {type(value)} with value: {value}")
 
             self.model.set_params(**params)
             scores = cross_val_score(self.model, X, y, cv=self.cv, scoring='average_precision') # set scoring to average_precision
